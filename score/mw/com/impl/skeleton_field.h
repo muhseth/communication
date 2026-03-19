@@ -270,7 +270,8 @@ SkeletonField<SampleDataType, EnableSet, EnableNotifier, EnableGet>::SkeletonFie
                                                      SkeletonFieldBindingFactory<SampleDataType>::CreateEventBinding(
                                                          SkeletonBaseView{parent}.GetAssociatedInstanceIdentifier(),
                                                          parent,
-                                                         field_name),
+                                                         field_name,
+                                                         (EnableSet || EnableGet) ? 1U : 0U),
                                                      typename SkeletonEvent<FieldType>::FieldOnlyConstructorEnabler{}),
           std::make_unique<SkeletonMethod<SetMethodSignature>>(
               parent,
@@ -299,7 +300,8 @@ SkeletonField<SampleDataType, EnableSet, EnableNotifier, EnableGet>::SkeletonFie
                                                      SkeletonFieldBindingFactory<SampleDataType>::CreateEventBinding(
                                                          SkeletonBaseView{parent}.GetAssociatedInstanceIdentifier(),
                                                          parent,
-                                                         field_name),
+                                                         field_name,
+                                                         (EnableSet || EnableGet) ? 1U : 0U),
                                                      typename SkeletonEvent<FieldType>::FieldOnlyConstructorEnabler{}),
           nullptr,
           std::make_unique<SkeletonMethod<GetMethodSignature>>(
@@ -324,7 +326,8 @@ SkeletonField<SampleDataType, EnableSet, EnableNotifier, EnableGet>::SkeletonFie
                                                      SkeletonFieldBindingFactory<SampleDataType>::CreateEventBinding(
                                                          SkeletonBaseView{parent}.GetAssociatedInstanceIdentifier(),
                                                          parent,
-                                                         field_name),
+                                                         field_name,
+                                                         (EnableSet || EnableGet) ? 1U : 0U),
                                                      typename SkeletonEvent<FieldType>::FieldOnlyConstructorEnabler{}),
           std::make_unique<SkeletonMethod<SetMethodSignature>>(
               parent,
@@ -349,7 +352,8 @@ SkeletonField<SampleDataType, EnableSet, EnableNotifier, EnableGet>::SkeletonFie
                                                      SkeletonFieldBindingFactory<SampleDataType>::CreateEventBinding(
                                                          SkeletonBaseView{parent}.GetAssociatedInstanceIdentifier(),
                                                          parent,
-                                                         field_name),
+                                                         field_name,
+                                                         (EnableSet || EnableGet) ? 1U : 0U),
                                                      typename SkeletonEvent<FieldType>::FieldOnlyConstructorEnabler{}),
           nullptr,
           nullptr,
