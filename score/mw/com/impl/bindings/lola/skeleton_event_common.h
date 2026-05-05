@@ -118,6 +118,7 @@ class SkeletonEventCommon
     std::optional<ProviderEventDataControlLocalView<>> provider_control_local_view_qm_;
     std::optional<ProviderEventDataControlLocalView<>> provider_control_local_view_asil_b_;
     std::optional<ConsumerEventDataControlLocalView<>> consumer_control_local_view_qm_;
+    std::optional<ConsumerEventDataControlLocalView<>> consumer_control_local_view_asil_;
     std::optional<EventDataControlComposite<>> event_data_control_composite_;
 
     EventSlotStatus::EventTimeStamp current_timestamp_;
@@ -173,13 +174,14 @@ void SkeletonEventCommon<SampleType>::PrepareOfferCommon(EventControl& event_con
                                                          EventControl* event_control_asil_b) noexcept
 {
     auto& provider_control_local_view_qm = provider_control_local_view_qm_.emplace(event_control_qm.data_control);
-    auto& consumer_control_local_view_qm = consumer_control_local_view_qm_.emplace(event_control_qm.data_control);
+    score::cpp::ignore = consumer_control_local_view_qm_.emplace(event_control_qm.data_control);
 
     ProviderEventDataControlLocalView<>* provider_control_local_view_asil_b_ptr{nullptr};
     if (event_control_asil_b != nullptr)
     {
         auto& provider_control_local_view_qm =
             provider_control_local_view_asil_b_.emplace(event_control_asil_b->data_control);
+        score::cpp::ignore = consumer_control_local_view_asil_.emplace(event_control_asil_b->data_control);
         provider_control_local_view_asil_b_ptr = &provider_control_local_view_qm;
     }
     score::cpp::ignore =
@@ -252,6 +254,7 @@ void SkeletonEventCommon<SampleType>::PrepareStopOfferCommon() noexcept
     provider_control_local_view_qm_.reset();
     provider_control_local_view_asil_b_.reset();
     consumer_control_local_view_qm_.reset();
+    consumer_control_local_view_asil_.reset();
 }
 
 template <typename SampleType>
