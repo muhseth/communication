@@ -88,12 +88,6 @@ class SkeletonEventCommonFixture : public SkeletonEventFixture
             return make_InstanceIdentifier(valid_qm_instance_deployment_, valid_type_deployment_);
         }
     }
-
-  private:
-    ServiceInstanceDeployment valid_qm_instance_deployment_{make_ServiceIdentifierType(service_type_name_),
-                                                            binding_info_,
-                                                            QualityType::kASIL_QM,
-                                                            instance_specifier_};
 };
 
 TEST_F(SkeletonEventCommonFixture, RegisterEventNotificationCallbacksForAsilBTriggersMessagePassingRegistration)
