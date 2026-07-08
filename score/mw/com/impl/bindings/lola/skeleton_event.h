@@ -32,8 +32,6 @@
 #include "score/mw/com/impl/skeleton_event_binding.h"
 #include "score/mw/com/impl/tracing/skeleton_event_tracing_data.h"
 
-#include "score/mw/log/logging.h"
-
 #include "score/result/result.h"
 #include <score/assert.hpp>
 #include <score/utility.hpp>
@@ -73,7 +71,7 @@ class SkeletonEvent final : public SkeletonEventBinding<SampleType>
                   const std::string_view event_name,
                   const SkeletonEventProperties properties,
                   impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data = {},
-                  bool getter_enabled = false) noexcept;
+                  bool field_getter_enabled = false) noexcept;
 
     SkeletonEvent(const SkeletonEvent&) = delete;
     SkeletonEvent(SkeletonEvent&&) noexcept = delete;
@@ -122,10 +120,15 @@ SkeletonEvent<SampleType>::SkeletonEvent(Skeleton& parent,
                                          const std::string_view event_name,
                                          const SkeletonEventProperties properties,
                                          impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data,
-                                         bool getter_enabled) noexcept
+                                         bool field_getter_enabled) noexcept
     : SkeletonEventBinding<SampleType>{},
       event_data_storage_{nullptr},
-      skeleton_event_common_{parent, event_name, properties, element_fq_id, skeleton_event_tracing_data, getter_enabled}
+      skeleton_event_common_{parent,
+                             event_name,
+                             properties,
+                             element_fq_id,
+                             skeleton_event_tracing_data,
+                             field_getter_enabled}
 {
 }
 
@@ -192,15 +195,7 @@ Result<impl::SampleAllocateePtr<SampleType>> SkeletonEvent<SampleType>::Allocate
 template <typename SampleType>
 Result<impl::SamplePtr<SampleType>> SkeletonEvent<SampleType>::GetLatestSample(QualityType quality_type)
 {
-    if (event_data_storage_ == nullptr)
-    {
-        ::score::mw::log::LogError("lola")
-            << "Tried to get latest event sample, but the event has not been offered yet!";
-        return MakeUnexpected(ComErrc::kBindingFailure);
-    }
-
-    auto guard_factory = skeleton_event_common_.AllocateGetterGuard();
-    auto guard = guard_factory.TakeGuard();
+    auto guard = skeleton_event_common_.AllocateGetterGuard();
     if (!guard.has_value())
     {
         ::score::mw::log::LogError("lola")
@@ -209,6 +204,10 @@ Result<impl::SamplePtr<SampleType>> SkeletonEvent<SampleType>::GetLatestSample(Q
     }
 
     auto& consumer_event_data_control_local = skeleton_event_common_.GetConsumerEventDataControlLocalView(quality_type);
+
+    // ReferenceNextEvent returns the slot with the highest timestamp in the exclusive range (min, max).
+    // We pass 0 and TIMESTAMP_MAX to span the entire valid timestamp range, so it always returns the
+    // most recently written sample regardless of its timestamp.
     const auto slot_result = consumer_event_data_control_local.ReferenceNextEvent(EventSlotStatus::EventTimeStamp{0U},
                                                                                   EventSlotStatus::TIMESTAMP_MAX);
     if (!slot_result.has_value())
@@ -233,9 +232,13 @@ template <typename SampleType>
 // coverity[autosar_cpp14_a15_5_3_violation : FALSE]
 Result<void> SkeletonEvent<SampleType>::PrepareOffer() noexcept
 {
+    // Invariant: after a successful PrepareOffer(), event_data_storage_ is guaranteed to be non-null.
+    // All methods that require event_data_storage_ (e.g. GetLatestSample) rely on this invariant.
     const auto registration_result = skeleton_event_common_.GetParent().template Register<SampleType>(
         skeleton_event_common_.GetElementFQId(), skeleton_event_common_.GetEventProperties());
     event_data_storage_ = &registration_result.event_data_storage;
+    SCORE_LANGUAGE_FUTURECPP_ASSERT_PRD_MESSAGE(event_data_storage_ != nullptr,
+                                                "event_data_storage_ must be non-null after PrepareOffer");
 
     skeleton_event_common_.PrepareOfferCommon(registration_result.event_control_qm,
                                               registration_result.event_control_asil_b);

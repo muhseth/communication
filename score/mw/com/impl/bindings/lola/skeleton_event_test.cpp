@@ -398,19 +398,6 @@ TEST_F(SkeletonEventPrepareStopOfferFixture, UnregisterEventNotificationExistenc
 }
 
 using SkeletonEventGetLatestSampleFixture = SkeletonEventFixture;
-TEST_F(SkeletonEventGetLatestSampleFixture, GetLatestSampleFailsBeforePrepareOffer)
-{
-    // Given a skeleton event that has not been offered
-    InitialiseSkeletonEvent(fake_element_fq_id_, fake_event_name_, max_samples_, max_subscribers_);
-
-    // When getting the latest sample
-    const auto latest_sample = skeleton_event_->GetLatestSample(QualityType::kASIL_QM);
-
-    // Then an error is returned
-    ASSERT_FALSE(latest_sample.has_value());
-    EXPECT_EQ(latest_sample.error(), ComErrc::kBindingFailure);
-}
-
 TEST_F(SkeletonEventGetLatestSampleFixture, GetLatestSampleFailsIfNoSampleWasSent)
 {
     // Given an offered skeleton event with no samples sent

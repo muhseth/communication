@@ -38,7 +38,7 @@ void SkeletonEventFixture::InitialiseSkeletonEvent(const ElementFqId element_fq_
                                                    const std::uint8_t max_subscribers,
                                                    const bool enforce_max_samples,
                                                    impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data,
-                                                   const bool getter_enabled)
+                                                   const bool field_getter_enabled)
 {
     // We defer initialisation of the Skeleton to InitialiseSkeletonEvent to allow test fixtures to set any mocked
     // expectations before creating the skeleton.
@@ -55,7 +55,7 @@ void SkeletonEventFixture::InitialiseSkeletonEvent(const ElementFqId element_fq_
         service_element_name,
         SkeletonEventProperties{max_samples, max_subscribers, enforce_max_samples},
         skeleton_event_tracing_data,
-        getter_enabled);
+        field_getter_enabled);
 }
 
 EventControl* SkeletonEventFixture::GetEventControl(const ElementFqId element_fq_id,
@@ -86,7 +86,7 @@ void SkeletonEventFixture::InitialiseSkeletonEventWithQmOnly(
     const std::uint8_t max_subscribers,
     const bool enforce_max_samples,
     impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data,
-    const bool getter_enabled)
+    const bool field_getter_enabled)
 {
     InitialiseSkeleton(make_InstanceIdentifier(valid_qm_instance_deployment_, valid_type_deployment_));
 
@@ -101,7 +101,7 @@ void SkeletonEventFixture::InitialiseSkeletonEventWithQmOnly(
         service_element_name,
         SkeletonEventProperties{max_samples, max_subscribers, enforce_max_samples},
         skeleton_event_tracing_data,
-        getter_enabled);
+        field_getter_enabled);
 }
 
 }  // namespace score::mw::com::impl::lola

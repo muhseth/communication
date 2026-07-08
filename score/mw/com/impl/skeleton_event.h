@@ -279,7 +279,7 @@ class SkeletonEventView
         return skeleton_event_.GetTypedEventBinding();
     }
 
-    Result<SamplePtr<SampleType>> GetLatestSample(const QualityType& quality_type) noexcept
+    Result<SamplePtr<SampleType>> GetLatestSample(const QualityType& quality_type)
     {
         return GetBinding()->GetLatestSample(quality_type);
     }

@@ -36,7 +36,7 @@ class SkeletonEventFixture : public SkeletonMockedMemoryFixture
                                  const std::uint8_t max_subscribers,
                                  bool enforce_max_samples = true,
                                  impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data = {},
-                                 bool getter_enabled = false);
+                                 bool field_getter_enabled = false);
 
     void InitialiseSkeletonEventWithQmOnly(ElementFqId element_fq_id,
                                            const std::string& service_element_name,
@@ -44,7 +44,7 @@ class SkeletonEventFixture : public SkeletonMockedMemoryFixture
                                            const std::uint8_t max_subscribers,
                                            bool enforce_max_samples = true,
                                            impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data = {},
-                                           bool getter_enabled = false);
+                                           bool field_getter_enabled = false);
 
     InstanceIdentifier GetValidInstanceIdentifier();
 

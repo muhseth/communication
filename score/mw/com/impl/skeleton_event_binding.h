@@ -91,8 +91,7 @@ class SkeletonEventBinding : public SkeletonEventBindingBase
     /// implementations.
     virtual Result<SampleAllocateePtr<SampleType>> Allocate() noexcept = 0;
 
-    /// \brief Gets the latest sample for the specified quality type.
-    /// \return On success, a SamplePtr holding the latest sample. On failure, an error code.
+    /// \brief Retrieves the latest sample, intended to support the getter of a SkeletonField.
     virtual Result<SamplePtr<SampleType>> GetLatestSample(QualityType quality_type) = 0;
 
     std::size_t GetMaxSize() const noexcept override

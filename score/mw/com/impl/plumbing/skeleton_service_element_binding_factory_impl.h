@@ -86,7 +86,8 @@ template <typename SkeletonServiceElementBinding, typename SkeletonServiceElemen
 auto CreateSkeletonEventOrField(const InstanceIdentifier& identifier,
                                 SkeletonBinding& parent_binding,
                                 const std::string_view service_element_name,
-                                bool getter_enabled = false) noexcept -> std::unique_ptr<SkeletonServiceElementBinding>
+                                bool field_getter_enabled = false) noexcept
+    -> std::unique_ptr<SkeletonServiceElementBinding>
 {
     static_assert((element_type == ServiceElementType::EVENT) || (element_type == ServiceElementType::FIELD));
 
@@ -94,7 +95,7 @@ auto CreateSkeletonEventOrField(const InstanceIdentifier& identifier,
 
     using ReturnType = std::unique_ptr<SkeletonServiceElementBinding>;
     auto visitor = score::cpp::overload(
-        [identifier_view, &parent_binding, &service_element_name, getter_enabled](
+        [identifier_view, &parent_binding, &service_element_name, field_getter_enabled](
             const LolaServiceTypeDeployment& lola_service_type_deployment) -> ReturnType {
             auto* const lola_parent = dynamic_cast<lola::Skeleton*>(&parent_binding);
             if (lola_parent == nullptr)
@@ -126,7 +127,7 @@ auto CreateSkeletonEventOrField(const InstanceIdentifier& identifier,
                                                             service_element_name,
                                                             skeleton_event_properties,
                                                             impl::tracing::SkeletonEventTracingData{},
-                                                            getter_enabled);
+                                                            field_getter_enabled);
         },
         [](const score::cpp::blank&) noexcept -> ReturnType {
             return nullptr;

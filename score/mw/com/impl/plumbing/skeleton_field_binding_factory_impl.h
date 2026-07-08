@@ -53,7 +53,7 @@ auto SkeletonFieldBindingFactoryImpl<SampleType>::CreateEventBinding(const Insta
                                                                      const std::string_view field_name) noexcept
     -> std::unique_ptr<SkeletonEventBinding<SampleType>>
 {
-    // TODO: Currently getter_enabled is hard coded to false, will add support
+    // TODO: Currently field_getter_enabled is hard coded to false, will add support
     //  when getter functionality of field is implemented.
     return CreateSkeletonEventOrField<SkeletonEventBinding<SampleType>,
                                       lola::SkeletonEvent<SampleType>,
