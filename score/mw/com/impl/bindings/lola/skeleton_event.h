@@ -70,8 +70,8 @@ class SkeletonEvent final : public SkeletonEventBinding<SampleType>
                   const ElementFqId element_fq_id,
                   const std::string_view event_name,
                   const SkeletonEventProperties properties,
-                  impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data = {},
-                  bool field_getter_enabled = false) noexcept;
+                  impl::tracing::SkeletonEventTracingData skeleton_event_tracing_data,
+                  bool field_getter_enabled) noexcept;
 
     SkeletonEvent(const SkeletonEvent&) = delete;
     SkeletonEvent(SkeletonEvent&&) noexcept = delete;
@@ -185,6 +185,11 @@ Result<impl::SampleAllocateePtr<SampleType>> SkeletonEvent<SampleType>::Allocate
     }
 
     const auto slot_index = allocated_slot_result.value();
+
+    // The ConsumerEventDataControlLocalView stored inside SampleAllocateePtr is only used by the send-tracing path.
+    //  Tracing is a diagnostic/monitoring feature with no safety requirement, so QM is sufficient.
+    //  GetConsumerEventDataControlLocalView(kASIL_B) is a separate code path introduced specifically for
+    //  GetLatestSample().
     return MakeSampleAllocateePtr(SampleAllocateePtr<SampleType>(
         &event_data_storage_->at(static_cast<std::uint64_t>(slot_index)),
         skeleton_event_common_.GetEventDataControlComposite(),

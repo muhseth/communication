@@ -1130,6 +1130,7 @@ cc_unit_test(
     deps = [
         ":skeleton",
         "//score/mw/com/impl/bindings/lola/test:skeleton_event_test_resources",
+        "//score/mw/com/impl/bindings/lola/test:transaction_log_test_resources",
     ],
 )
 

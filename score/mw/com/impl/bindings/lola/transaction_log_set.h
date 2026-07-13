@@ -232,6 +232,8 @@ class TransactionLogSet
     ///        ConsumerEventDataControlLocalView which it uses for recording reference transactions. This is a
     ///        ConsumerEventDataControlLocalView even though it's provided by a Skeleton since it is used for
     ///        referencing slots on the Skeleton side (so it behaves like a ProxyEvent within the SkeletonEvent).
+    ///        It's used by tracing (to lock a slot which is currently being traced) and for a SkeletonField's getter
+    ///        (to lock a slot while getter reads the latest value).
     /// \return Returns TransactionLogRegistrationGuard which holds a special sentinel index value which will return the
     ///         registered skeleton transaction log when passing the sentinel value to GetTransactionLog.
     ///         The guard will call TransactionLogSet::Unregister() and destroy the cached TransactionLogLocalView on

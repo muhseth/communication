@@ -86,8 +86,7 @@ template <typename SkeletonServiceElementBinding, typename SkeletonServiceElemen
 auto CreateSkeletonEventOrField(const InstanceIdentifier& identifier,
                                 SkeletonBinding& parent_binding,
                                 const std::string_view service_element_name,
-                                bool field_getter_enabled = false) noexcept
-    -> std::unique_ptr<SkeletonServiceElementBinding>
+                                bool field_getter_enabled) noexcept -> std::unique_ptr<SkeletonServiceElementBinding>
 {
     static_assert((element_type == ServiceElementType::EVENT) || (element_type == ServiceElementType::FIELD));
 

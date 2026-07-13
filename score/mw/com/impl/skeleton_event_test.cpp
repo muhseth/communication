@@ -666,9 +666,11 @@ TEST(SkeletonEventGetLatestSampleTest, CallingGetLatestSampleDispatchesToBinding
         .WillByDefault(Return(ByMove(std::move(skeleton_event_binding_mock_ptr))));
 
     // and that GetLatestSample() is called once on the event binding which returns a valid sample
+    const TestSampleType expected_sample_value{42U};
     EXPECT_CALL(skeleton_event_binding_mock, GetLatestSample(QualityType::kASIL_QM))
         .WillOnce(Return(ByMove(SamplePtr<TestSampleType>{
-            mock_binding::SamplePtr<TestSampleType>{std::make_unique<TestSampleType>(42U)}, SampleReferenceGuard{}})));
+            mock_binding::SamplePtr<TestSampleType>{std::make_unique<TestSampleType>(expected_sample_value)},
+            SampleReferenceGuard{}})));
 
     // Given a skeleton which has a mock skeleton-binding
     MyDummySkeleton unit{std::make_unique<mock_binding::Skeleton>(), kInstanceIdWithLolaBinding};
@@ -679,10 +681,10 @@ TEST(SkeletonEventGetLatestSampleTest, CallingGetLatestSampleDispatchesToBinding
 
     // Then the result is valid and contains the sample from the binding
     ASSERT_TRUE(latest_sample_result.has_value());
-    EXPECT_EQ(*latest_sample_result.value(), static_cast<TestSampleType>(42U));
+    EXPECT_EQ(*latest_sample_result.value(), expected_sample_value);
 }
 
-TEST(SkeletonEventGetLatestSampleTest, CallingGetLatestSampleWhenBindingFailsReturnsError)
+TEST(SkeletonEventGetLatestSampleTest, GetLatestSamplePropagatesErrorFromBinding)
 {
     RuntimeMockGuard runtime_mock_guard{};
     ON_CALL(runtime_mock_guard.runtime_mock_, GetTracingFilterConfig()).WillByDefault(Return(nullptr));

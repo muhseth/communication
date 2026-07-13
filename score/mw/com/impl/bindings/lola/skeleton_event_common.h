@@ -66,8 +66,8 @@ class SkeletonEventCommon
                         const std::string_view event_name,
                         const SkeletonEventProperties& event_properties,
                         const ElementFqId& element_fq_id,
-                        impl::tracing::SkeletonEventTracingData tracing_data = {},
-                        bool field_getter_enabled = false) noexcept;
+                        impl::tracing::SkeletonEventTracingData tracing_data,
+                        bool field_getter_enabled) noexcept;
 
     SkeletonEventCommon(const SkeletonEventCommon&) = delete;
     SkeletonEventCommon(SkeletonEventCommon&&) noexcept = delete;
@@ -94,9 +94,9 @@ class SkeletonEventCommon
 
     /// \brief Reserve a getter slot to limit the number of concurrent SamplePtrs we can create
     ///        from SkeletonEvent<SampleType>::GetLatestSample
-    std::optional<SampleReferenceGuard> AllocateGetterGuard() noexcept
+    std::optional<SampleReferenceGuard> AllocateGetterGuard()
     {
-        return getter_sample_tracker_.Allocate(kMaxConcurrentFieldGetterSamplePtrs).TakeGuard();
+        return getter_sample_tracker_.Allocate(1U).TakeGuard();
     }
 
     const ElementFqId& GetElementFQId() const&
@@ -263,8 +263,7 @@ void SkeletonEventCommon<SampleType>::PrepareOfferCommon(EventControl& event_con
                 consumer_control_local_view_qm_.value()));
     }
 
-    // ASIL-B TransactionLog: register on ASIL-B's own transaction_log_set_ if getter is enabled
-    // and SkeletonEvent ASIL-B exists.
+    // ASIL-B TransactionLog: register ASIL-B TransactionLog if getter is enabled AND SkeletonEvent is ASIL-B.
     if (field_getter_enabled_ && is_skeleton_event_asil_b)
     {
         SCORE_LANGUAGE_FUTURECPP_ASSERT_PRD(consumer_control_local_view_asil_b_.has_value());

@@ -92,9 +92,9 @@ class SkeletonEventTracingFixture : public SkeletonEventFixture
         return event_data_control_composite.GetEventSlotTimestamp(slot);
     }
 
-    TransactionLogSet& GetTransactionLogSet()
+    TransactionLogSet& GetTransactionLogSet(const QualityType quality_type)
     {
-        auto* const event_control = GetEventControl(fake_element_fq_id_, QualityType::kASIL_QM);
+        auto* const event_control = GetEventControl(fake_element_fq_id_, quality_type);
         SCORE_LANGUAGE_FUTURECPP_ASSERT(event_control != nullptr);
         return event_control->transaction_log_set_;
     }
@@ -455,39 +455,13 @@ TEST_F(SkeletonEventTracingSendWithAllocateFixture, MultipleSendCallsUsesCorrect
 using SkeletonEventTracingPrepareOfferFixture = SkeletonEventTracingFixture;
 
 TEST_F(SkeletonEventTracingPrepareOfferFixture,
-       WhenGetterEnabledAndTracingDisabledTransactionLogIsRegisteredOnQmTransactionLogSet)
-{
-    const bool enforce_max_samples{true};
-
-    // Expecting that the TracingFilterConfig has no trace points enabled.
-    impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
-
-    // Given a skeleton event in an offered service with the getter enabled
-    InitialiseSkeletonEvent(fake_element_fq_id_,
-                            fake_event_name_,
-                            max_samples_,
-                            max_subscribers_,
-                            enforce_max_samples,
-                            expected_enabled_trace_points,
-                            true);
-
-    // Given an offered event in an offered service
-    std::ignore = skeleton_event_->PrepareOffer();
-
-    // Then a TransactionLog is registered even when tracing is disabled.
-    auto& transaction_log_set = GetTransactionLogSet();
-    const auto skeleton_transaction_log_result =
-        TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog();
-    ASSERT_TRUE(skeleton_transaction_log_result.has_value());
-}
-
-TEST_F(SkeletonEventTracingPrepareOfferFixture,
-       WhenGetterEnabledAndAsilBExistsTransactionLogIsRegisteredOnAsilBTransactionLogSet)
+       WhenTracingAndGetterEnabledTransactionLogIsRegisteredOnQmTransactionLogSet)
 {
     const bool enforce_max_samples{true};
     impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
+    expected_enabled_trace_points.enable_send = true;
 
-    // Given a skeleton event(ASIL-B) offered service with the getter enabled
+    // Given a skeleton event in an offered service with the getter enabled and tracing enabled
     InitialiseSkeletonEvent(fake_element_fq_id_,
                             fake_event_name_,
                             max_samples_,
@@ -499,82 +473,9 @@ TEST_F(SkeletonEventTracingPrepareOfferFixture,
     // When the event is offered
     std::ignore = skeleton_event_->PrepareOffer();
 
-    // Then a TransactionLog is registered on the ASIL-B EventControl's  transaction_log_set_
-    auto* const event_control_asil_b = GetEventControl(fake_element_fq_id_, QualityType::kASIL_B);
-    ASSERT_NE(event_control_asil_b, nullptr);
-    const auto asil_b_skeleton_log =
-        TransactionLogSetAttorney{event_control_asil_b->transaction_log_set_}.GetSkeletonTransactionLog();
-    ASSERT_TRUE(asil_b_skeleton_log.has_value());
-}
-
-TEST_F(SkeletonEventTracingPrepareOfferFixture,
-       WhenTracingDisabledAndGetterDisabledTransactionLogIsNotRegisteredOnQmTransactionLogSet)
-{
-    const bool enforce_max_samples{true};
-    impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
-
-    InitialiseSkeletonEvent(fake_element_fq_id_,
-                            fake_event_name_,
-                            max_samples_,
-                            max_subscribers_,
-                            enforce_max_samples,
-                            expected_enabled_trace_points);
-
-    std::ignore = skeleton_event_->PrepareOffer();
-
-    auto& transaction_log_set = GetTransactionLogSet();
-    const auto skeleton_transaction_log_result =
-        TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog();
-    ASSERT_FALSE(skeleton_transaction_log_result.has_value());
-}
-
-TEST_F(SkeletonEventTracingPrepareOfferFixture,
-       WhenGetterDisabledAndAsilBExistsTransactionLogIsNotRegisteredOnAsilBTransactionLogSet)
-{
-    const bool enforce_max_samples{true};
-    impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
-
-    // Given a skeleton event in an ASIL-B offered service with the getter disabled
-    InitialiseSkeletonEvent(fake_element_fq_id_,
-                            fake_event_name_,
-                            max_samples_,
-                            max_subscribers_,
-                            enforce_max_samples,
-                            expected_enabled_trace_points);
-
-    // When the event is offered (getter not enabled)
-    std::ignore = skeleton_event_->PrepareOffer();
-
-    // Then no TransactionLog is registered on the ASIL-B  transaction_log_set_
-    auto* const event_control_asil_b = GetEventControl(fake_element_fq_id_, QualityType::kASIL_B);
-    ASSERT_NE(event_control_asil_b, nullptr);
-    const auto asil_b_skeleton_log =
-        TransactionLogSetAttorney{event_control_asil_b->transaction_log_set_}.GetSkeletonTransactionLog();
-    ASSERT_FALSE(asil_b_skeleton_log.has_value());
-}
-
-TEST_F(SkeletonEventTracingPrepareOfferFixture,
-       WhenGetterEnabledAndNoAsilBExistsTransactionLogIsRegisteredOnlyOnQmTransactionLogSet)
-{
-    const bool enforce_max_samples{true};
-    impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
-
-    // Given a QM-only skeleton event with the getter enabled
-    InitialiseSkeletonEventWithQmOnly(fake_element_fq_id_,
-                                      fake_event_name_,
-                                      max_samples_,
-                                      max_subscribers_,
-                                      enforce_max_samples,
-                                      expected_enabled_trace_points,
-                                      true);
-
-    // When the event is offered
-    std::ignore = skeleton_event_->PrepareOffer();
-
-    // Then no ASIL-B EventControl exists (confirming QM-only setup)
-    ASSERT_EQ(GetEventControl(fake_element_fq_id_, QualityType::kASIL_B), nullptr);
-    // Then the QM TransactionLog is registered
-    ASSERT_TRUE(TransactionLogSetAttorney{GetTransactionLogSet()}.GetSkeletonTransactionLog().has_value());
+    // Then a TransactionLog is registered on the QM TransactionLogSet
+    ASSERT_TRUE(
+        TransactionLogSetAttorney{GetTransactionLogSet(QualityType::kASIL_QM)}.GetSkeletonTransactionLog().has_value());
 }
 
 TEST_F(SkeletonEventTracingPrepareOfferFixture, WhenSendTracingEnabledTransactionLogIsRegisteredOnQmTransactionLogSet)
@@ -597,14 +498,13 @@ TEST_F(SkeletonEventTracingPrepareOfferFixture, WhenSendTracingEnabledTransactio
     std::ignore = skeleton_event_->PrepareOffer();
 
     // Then a TransactionLog is registered
-    auto& transaction_log_set = GetTransactionLogSet();
+    auto& transaction_log_set = GetTransactionLogSet(QualityType::kASIL_QM);
     const auto skeleton_transaction_log_result =
         TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog();
     ASSERT_TRUE(skeleton_transaction_log_result.has_value());
 }
 
-TEST_F(SkeletonEventTracingPrepareOfferFixture,
-       WhenSendWithAllocateTracingEnabledTransactionLogIsRegisteredOnQmTransactionLogSet)
+TEST_F(SkeletonEventTracingPrepareOfferFixture, EnablingSendWithAllocateTracingWillRegisterQmTransactionLog)
 {
     const bool enforce_max_samples{true};
 
@@ -624,7 +524,7 @@ TEST_F(SkeletonEventTracingPrepareOfferFixture,
     std::ignore = skeleton_event_->PrepareOffer();
 
     // Then a TransactionLog is registered
-    auto& transaction_log_set = GetTransactionLogSet();
+    auto& transaction_log_set = GetTransactionLogSet(QualityType::kASIL_QM);
     const auto skeleton_transaction_log_result =
         TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog();
     ASSERT_TRUE(skeleton_transaction_log_result.has_value());
@@ -651,7 +551,7 @@ TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillRemoveRe
     std::ignore = skeleton_event_->PrepareOffer();
 
     // Then a TransactionLog is registered
-    auto& transaction_log_set = GetTransactionLogSet();
+    auto& transaction_log_set = GetTransactionLogSet(QualityType::kASIL_QM);
     ASSERT_TRUE(TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog().has_value());
 
     // and when calling PrepareStopOffer
@@ -681,7 +581,7 @@ TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillRemoveTr
     std::ignore = skeleton_event_->PrepareOffer();
 
     // Then a TransactionLog is registered even when tracing is disabled.
-    auto& transaction_log_set = GetTransactionLogSet();
+    auto& transaction_log_set = GetTransactionLogSet(QualityType::kASIL_QM);
     ASSERT_TRUE(TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog().has_value());
 
     // and when calling PrepareStopOffer
