@@ -201,6 +201,8 @@ class SkeletonEventComponentTestTemplateFixture : public ::testing::Test
 
     const std::uint8_t max_subscribers_{3U};
     const bool enforce_max_samples_{true};
+    const impl::tracing::SkeletonEventTracingData disabled_tracing_data_{};
+    static constexpr bool field_getter_disabled_{false};
     const ElementFqId fake_element_fq_id_{1, 1, 1, ServiceElementType::EVENT};
     const std::string fake_event_name_{"dummy"};
     const InstanceSpecifier instance_specifier_{
@@ -247,8 +249,8 @@ class SkeletonEventComponentTestTemplateFixture : public ::testing::Test
         fake_element_fq_id_,
         fake_event_name_,
         SkeletonEventProperties{MaxSamples, max_subscribers_, enforce_max_samples_},
-        impl::tracing::SkeletonEventTracingData{},
-        false};
+        disabled_tracing_data_,
+        field_getter_disabled_};
 };
 
 using SkeletonEventComponentTestFixture = SkeletonEventComponentTestTemplateFixture<5>;

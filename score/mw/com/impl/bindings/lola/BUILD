@@ -1335,9 +1335,13 @@ cc_unit_test(
     srcs = [
         "skeleton_event_test.cpp",
     ],
-    features = COMPILER_WARNING_FEATURES,
+    features = COMPILER_WARNING_FEATURES + [
+        # These tests catch exceptions instead of using gtest EXPECT_DEATH so we disable aborts_upon_exception.
+        "-aborts_upon_exception",
+    ],
     deps = [
         "//score/mw/com/impl/bindings/lola/test:skeleton_event_test_resources",
+        "@score_baselibs//score/language/futurecpp:futurecpp_test_support",
     ],
 )
 

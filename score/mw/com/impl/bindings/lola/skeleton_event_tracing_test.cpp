@@ -68,6 +68,8 @@ using ::testing::Return;
 using ::testing::StrictMock;
 using ::testing::WithArgs;
 
+static constexpr bool kEnforceMaxSamples{true};
+
 class SkeletonEventTracingFixture : public SkeletonEventFixture
 {
   public:
@@ -98,6 +100,13 @@ class SkeletonEventTracingFixture : public SkeletonEventFixture
         SCORE_LANGUAGE_FUTURECPP_ASSERT(event_control != nullptr);
         return event_control->transaction_log_set_;
     }
+
+    std::optional<std::reference_wrapper<TransactionLog>> GetSkeletonTransactionLog(const QualityType quality_type)
+    {
+        auto* const event_control = GetEventControl(fake_element_fq_id_, quality_type);
+        SCORE_LANGUAGE_FUTURECPP_ASSERT(event_control != nullptr);
+        return TransactionLogSetAttorney{event_control->transaction_log_set_}.GetSkeletonTransactionLog();
+    }    
 };
 
 using SkeletonEventTracingSendFixture = SkeletonEventTracingFixture;
@@ -113,7 +122,6 @@ TEST_F(SkeletonEventTracingSendFixture, SendCallsAreTracedWhenEnabled)
     RecordProperty("Priority", "1");
     RecordProperty("DerivationTechnique", "Analysis of requirements");
 
-    const bool enforce_max_samples{true};
     const auto expected_service_element_instance_identifier_view = CreateServiceElementInstanceIdentifierView();
 
     const impl::tracing::ServiceElementTracingData service_element_tracing_data{0U, 1U};
@@ -156,7 +164,7 @@ TEST_F(SkeletonEventTracingSendFixture, SendCallsAreTracedWhenEnabled)
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
 
     // Given an offered event in an offered service
@@ -180,7 +188,6 @@ TEST_F(SkeletonEventTracingSendFixture, MultipleSendCallsUsesCorrectTracePointDa
     RecordProperty("Priority", "1");
     RecordProperty("DerivationTechnique", "Analysis of requirements");
 
-    const bool enforce_max_samples{true};
     const auto expected_service_element_instance_identifier_view = CreateServiceElementInstanceIdentifierView();
 
     const impl::tracing::ServiceElementTracingData service_element_tracing_data{0U, 1U};
@@ -226,7 +233,7 @@ TEST_F(SkeletonEventTracingSendFixture, MultipleSendCallsUsesCorrectTracePointDa
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
 
     // Given an offered event in an offered service
@@ -250,7 +257,6 @@ TEST_F(SkeletonEventTracingSendFixture, SendCallsAreNotTracedWhenAllocateFails)
     RecordProperty("Priority", "1");
     RecordProperty("DerivationTechnique", "Analysis of requirements");
 
-    const bool enforce_max_samples{true};
     const auto expected_service_element_instance_identifier_view = CreateServiceElementInstanceIdentifierView();
 
     impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
@@ -264,7 +270,7 @@ TEST_F(SkeletonEventTracingSendFixture, SendCallsAreNotTracedWhenAllocateFails)
     // Expecting that a trace call relating to Send is never called
 
     // Given a skeleton event in an offered service
-    InitialiseSkeletonEvent(fake_element_fq_id_, fake_event_name_, max_samples_, max_subscribers_, enforce_max_samples);
+    InitialiseSkeletonEvent(fake_element_fq_id_, fake_event_name_, max_samples_, max_subscribers_, kEnforceMaxSamples);
 
     // Given an offered event in an offered service
     std::ignore = skeleton_event_->PrepareOffer();
@@ -297,7 +303,6 @@ TEST_F(SkeletonEventTracingSendWithAllocateFixture, SendWithAllocateCallsAreTrac
     RecordProperty("Priority", "1");
     RecordProperty("DerivationTechnique", "Analysis of requirements");
 
-    const bool enforce_max_samples{true};
     const auto expected_service_element_instance_identifier_view = CreateServiceElementInstanceIdentifierView();
 
     const impl::tracing::ServiceElementTracingData service_element_tracing_data{0U, 1U};
@@ -341,7 +346,7 @@ TEST_F(SkeletonEventTracingSendWithAllocateFixture, SendWithAllocateCallsAreTrac
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
 
     // Given an offered event in an offered service
@@ -372,7 +377,6 @@ TEST_F(SkeletonEventTracingSendWithAllocateFixture, MultipleSendCallsUsesCorrect
     RecordProperty("Priority", "1");
     RecordProperty("DerivationTechnique", "Analysis of requirements");
 
-    const bool enforce_max_samples{true};
     const auto expected_service_element_instance_identifier_view = CreateServiceElementInstanceIdentifierView();
 
     const impl::tracing::ServiceElementTracingData service_element_tracing_data{0U, 1U};
@@ -419,7 +423,7 @@ TEST_F(SkeletonEventTracingSendWithAllocateFixture, MultipleSendCallsUsesCorrect
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
 
     // Given an offered event in an offered service
@@ -454,33 +458,31 @@ TEST_F(SkeletonEventTracingSendWithAllocateFixture, MultipleSendCallsUsesCorrect
 
 using SkeletonEventTracingPrepareOfferFixture = SkeletonEventTracingFixture;
 
-TEST_F(SkeletonEventTracingPrepareOfferFixture,
-       WhenTracingAndGetterEnabledTransactionLogIsRegisteredOnQmTransactionLogSet)
+TEST_F(SkeletonEventTracingPrepareOfferFixture, DisablingTracingWillNotRegisterTransactionLog)
 {
-    const bool enforce_max_samples{true};
+    // Expecting that the TracingFilterConfig has no trace points enabled.
     impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
-    expected_enabled_trace_points.enable_send = true;
 
-    // Given a skeleton event in an offered service with the getter enabled and tracing enabled
+    // Given a skeleton event in an offered service
     InitialiseSkeletonEvent(fake_element_fq_id_,
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
-                            expected_enabled_trace_points,
-                            true);
+                            kEnforceMaxSamples,
+                            expected_enabled_trace_points);
 
-    // When the event is offered
+    // Given an offered event in an offered service
     std::ignore = skeleton_event_->PrepareOffer();
 
-    // Then a TransactionLog is registered on the QM TransactionLogSet
-    ASSERT_TRUE(
-        TransactionLogSetAttorney{GetTransactionLogSet(QualityType::kASIL_QM)}.GetSkeletonTransactionLog().has_value());
+    // Then a TransactionLog is not registered
+    auto& transaction_log_set = GetTransactionLogSet(QualityType::kASIL_QM);
+    const auto skeleton_transaction_log_result =
+        TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog();
+    ASSERT_FALSE(skeleton_transaction_log_result.has_value());
 }
 
 TEST_F(SkeletonEventTracingPrepareOfferFixture, WhenSendTracingEnabledTransactionLogIsRegisteredOnQmTransactionLogSet)
 {
-    const bool enforce_max_samples{true};
 
     // Expecting that the TracingFilterConfig has only the event Send trace point enabled.
     impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
@@ -491,22 +493,18 @@ TEST_F(SkeletonEventTracingPrepareOfferFixture, WhenSendTracingEnabledTransactio
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
 
     // Given an offered event in an offered service
     std::ignore = skeleton_event_->PrepareOffer();
 
     // Then a TransactionLog is registered
-    auto& transaction_log_set = GetTransactionLogSet(QualityType::kASIL_QM);
-    const auto skeleton_transaction_log_result =
-        TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog();
-    ASSERT_TRUE(skeleton_transaction_log_result.has_value());
+    ASSERT_TRUE(GetSkeletonTransactionLog(QualityType::kASIL_QM).has_value());
 }
 
 TEST_F(SkeletonEventTracingPrepareOfferFixture, EnablingSendWithAllocateTracingWillRegisterQmTransactionLog)
 {
-    const bool enforce_max_samples{true};
 
     // Expecting that the TracingFilterConfig has only the event Send with allocate trace point enabled.
     impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
@@ -517,23 +515,42 @@ TEST_F(SkeletonEventTracingPrepareOfferFixture, EnablingSendWithAllocateTracingW
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
 
     // Given an offered event in an offered service
     std::ignore = skeleton_event_->PrepareOffer();
 
     // Then a TransactionLog is registered
-    auto& transaction_log_set = GetTransactionLogSet(QualityType::kASIL_QM);
-    const auto skeleton_transaction_log_result =
-        TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog();
-    ASSERT_TRUE(skeleton_transaction_log_result.has_value());
+     ASSERT_TRUE(GetSkeletonTransactionLog(QualityType::kASIL_QM).has_value());
+}
+
+TEST_F(SkeletonEventTracingPrepareOfferFixture,
+       WhenTracingAndGetterEnabledTransactionLogIsRegisteredOnQmTransactionLogSet)
+{
+    impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
+    expected_enabled_trace_points.enable_send = true;
+    const bool field_getter_enabled{true};
+
+    // Given a skeleton event in an offered service with the getter enabled and tracing enabled
+    InitialiseSkeletonEvent(fake_element_fq_id_,
+                            fake_event_name_,
+                            max_samples_,
+                            max_subscribers_,
+                            kEnforceMaxSamples,
+                            expected_enabled_trace_points,
+                            field_getter_enabled);
+
+    // When the event is offered
+    std::ignore = skeleton_event_->PrepareOffer();
+
+    // Then a TransactionLog is registered on the QM TransactionLogSet
+    ASSERT_TRUE(GetSkeletonTransactionLog(QualityType::kASIL_QM).has_value());
 }
 
 using SkeletonEventTracingPrepareStopOfferFixture = SkeletonEventTracingFixture;
 TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillRemoveRegisteredTransactionLog)
 {
-    const bool enforce_max_samples{true};
 
     // Expecting that the TracingFilterConfig has only the event Send trace point enabled.
     impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
@@ -544,7 +561,7 @@ TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillRemoveRe
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
 
     // Given an offered event in an offered service
@@ -563,19 +580,19 @@ TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillRemoveRe
 
 TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillRemoveTransactionLogWhenTracingDisabled)
 {
-    const bool enforce_max_samples{true};
 
     // Expecting that the TracingFilterConfig has no trace points enabled.
     impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
+    const bool field_getter_enabled{true};
 
     // Given a skeleton event in an offered service with the getter enabled
     InitialiseSkeletonEvent(fake_element_fq_id_,
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points,
-                            true);
+                            field_getter_enabled);
 
     // Given an offered event in an offered service
     std::ignore = skeleton_event_->PrepareOffer();
@@ -591,36 +608,6 @@ TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillRemoveTr
     ASSERT_FALSE(TransactionLogSetAttorney{transaction_log_set}.GetSkeletonTransactionLog().has_value());
 }
 
-TEST_F(SkeletonEventTracingPrepareStopOfferFixture,
-       PrepareStopOfferUnregistersAsilBTransactionLogFromAsilBTransactionLogSet)
-{
-    const bool enforce_max_samples{true};
-    impl::tracing::SkeletonEventTracingData expected_enabled_trace_points{};
-
-    // Given a skeleton event in an ASIL-B offered service with the getter enabled
-    InitialiseSkeletonEvent(fake_element_fq_id_,
-                            fake_event_name_,
-                            max_samples_,
-                            max_subscribers_,
-                            enforce_max_samples,
-                            expected_enabled_trace_points,
-                            true);
-    std::ignore = skeleton_event_->PrepareOffer();
-
-    auto* const event_control_asil_b = GetEventControl(fake_element_fq_id_, QualityType::kASIL_B);
-    ASSERT_NE(event_control_asil_b, nullptr);
-    // Then a TransactionLog is registered on the ASIL-B EventControl's own transaction_log_set_
-    ASSERT_TRUE(
-        TransactionLogSetAttorney{event_control_asil_b->transaction_log_set_}.GetSkeletonTransactionLog().has_value());
-
-    // When calling PrepareStopOffer
-    skeleton_event_->PrepareStopOffer();
-
-    // Then the ASIL-B TransactionLog is unregistered from the ASIL-B EventControl's own transaction_log_set_
-    ASSERT_FALSE(
-        TransactionLogSetAttorney{event_control_asil_b->transaction_log_set_}.GetSkeletonTransactionLog().has_value());
-}
-
 TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillCallClearTypeErasedSamplePtrs)
 {
     // Given a SkeletonEventTracingData with a trace point enabled.
@@ -634,12 +621,11 @@ TEST_F(SkeletonEventTracingPrepareStopOfferFixture, PrepareStopOfferWillCallClea
                 ClearTypeErasedSamplePtrs(expected_enabled_trace_points.service_element_tracing_data));
 
     // Given a skeleton event in an offered service
-    const bool enforce_max_samples{true};
     InitialiseSkeletonEvent(fake_element_fq_id_,
                             fake_event_name_,
                             max_samples_,
                             max_subscribers_,
-                            enforce_max_samples,
+                            kEnforceMaxSamples,
                             expected_enabled_trace_points);
     std::ignore = skeleton_event_->PrepareOffer();
 

@@ -200,6 +200,11 @@ Result<impl::SampleAllocateePtr<SampleType>> SkeletonEvent<SampleType>::Allocate
 template <typename SampleType>
 Result<impl::SamplePtr<SampleType>> SkeletonEvent<SampleType>::GetLatestSample(QualityType quality_type)
 {
+    const QualityType event_quality_type = skeleton_event_common_.GetParent().GetInstanceQualityType();
+    SCORE_LANGUAGE_FUTURECPP_PRECONDITION_PRD_MESSAGE(
+        !((event_quality_type == QualityType::kASIL_QM) && (quality_type == QualityType::kASIL_B)),
+        "ASIL-B event support ASIL-QM and ASIL-B quality types, but ASIL-QM event support only ASIL-QM quality type.");
+
     auto guard = skeleton_event_common_.AllocateGetterGuard();
     if (!guard.has_value())
     {
